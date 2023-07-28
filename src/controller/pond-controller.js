@@ -1,7 +1,7 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
-const db = require("../../db");
+const db = require("../db");
 const multer = require("multer");
+const { authenticateToken } = require("../auth-token");
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -186,30 +186,5 @@ router.delete("/:id/delete-pond", authenticateToken, async (req, res) => {
 		});
 	}
 });
-
-// Middleware to authenticate the JWT token
-function authenticateToken(req, res, next) {
-	const authHeader = req.headers.authorization;
-	const token = authHeader && authHeader.split(" ")[1];
-
-	if (!token) {
-		return res.status(401).json({
-			code: "401",
-			message: "No token provided",
-		});
-	}
-
-	jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-		if (err) {
-			return res.status(403).json({
-				code: "403",
-				message: "Invalid token",
-			});
-		}
-
-		req.userId = decoded.userId;
-		next();
-	});
-}
 
 module.exports = router;
