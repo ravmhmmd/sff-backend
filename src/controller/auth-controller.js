@@ -3,6 +3,7 @@ const { authenticateToken } = require("../auth-token");
 const express = require("express");
 const bcrypt = require("bcrypt");
 const multer = require("multer");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 const postForm = multer();
