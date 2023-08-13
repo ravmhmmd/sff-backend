@@ -15,12 +15,12 @@ router.post(
 	async (req, res) => {
 		try {
 			const userId = req.userId;
-			const { pond_id } = req.body;
+			const { pond_id, video_path } = req.body;
 
 			// Insert the new hunger data into the database
 			const newHunger = await db.query(
-				"INSERT INTO fish_hungers (user_id, pond_id) VALUES ($1, $2) RETURNING *",
-				[userId, pond_id]
+				"INSERT INTO fish_hungers (user_id, pond_id, video_path) VALUES ($1, $2, $3) RETURNING *",
+				[userId, pond_id, video_path]
 			);
 
 			res.status(201).json({
@@ -38,7 +38,7 @@ router.post(
 	}
 );
 
-// Add fish hunger data video path
+// Add fish hunger data video path (deprecated)
 router.put(
 	"/hunger/:id/update-video-path",
 	authenticateToken,
