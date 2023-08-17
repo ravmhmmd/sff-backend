@@ -104,7 +104,7 @@ router.get("/feeding", authenticateToken, async (req, res) => {
 		const userId = req.userId;
 
 		const fishFeedings = await db.query(
-			"SELECT * FROM fish_feedings WHERE user_id  = $1",
+			"SELECT * FROM fish_feedings WHERE user_id = $1",
 			[userId]
 		);
 
@@ -153,7 +153,7 @@ router.get("/feeding/:id", authenticateToken, async (req, res) => {
 			result: { fishFeeding: fishFeeding.rows[0] },
 		});
 	} catch (error) {
-		console.error("Error getting fish hunger data:", error);
+		console.error("Error getting fish feeding data:", error);
 		res.status(500).json({
 			code: "500",
 			message: "Internal server error",
@@ -186,6 +186,99 @@ router.get("/feeding/pond/:id", authenticateToken, async (req, res) => {
 		});
 	} catch (error) {
 		console.error("Error getting fish feeding data:", error);
+		res.status(500).json({
+			code: "500",
+			message: "Internal server error",
+		});
+	}
+});
+
+// Get fish feed use total
+router.get("/feed-use", authenticateToken, async (req, res) => {
+	try {
+		const userId = req.userId;
+
+		const feedUse = await db.query(
+			"SELECT user_id, SUM (n_fish_feed_use) as total_fish_feed_used FROM fish_feedings WHERE user_id = $1 GROUP BY user_id",
+			[userId]
+		);
+
+		if (feedUse.rows.length === 0) {
+			return res.status(200).json({
+				code: "200",
+				message: "User does not have any fish feeding analytic",
+			});
+		}
+
+		res.status(200).json({
+			code: "200",
+			message: "User fish feed use data retrieved succesfully",
+			result: { feedUse: feedUse.rows },
+		});
+	} catch (error) {
+		console.error("Error getting fish feed use data:", error);
+		res.status(500).json({
+			code: "500",
+			message: "Internal server error",
+		});
+	}
+});
+
+// Get fish feed use per pond
+router.get("/feed-use/ponds", authenticateToken, async (req, res) => {
+	try {
+		const userId = req.userId;
+
+		const feedUse = await db.query(
+			"SELECT pond_id, SUM (n_fish_feed_use) as total_fish_feed_used FROM fish_feedings WHERE user_id = $1 GROUP BY pond_id",
+			[userId]
+		);
+
+		if (feedUse.rows.length === 0) {
+			return res.status(200).json({
+				code: "200",
+				message: "User does not have any fish feeding analytic",
+			});
+		}
+
+		res.status(200).json({
+			code: "200",
+			message: "User fish feed use data retrieved succesfully",
+			result: { feedUse: feedUse.rows },
+		});
+	} catch (error) {
+		console.error("Error getting fish feed use data:", error);
+		res.status(500).json({
+			code: "500",
+			message: "Internal server error",
+		});
+	}
+});
+
+// Get fish feed use daily
+router.get("/feed-use/daily", authenticateToken, async (req, res) => {
+	try {
+		const userId = req.userId;
+
+		const feedUse = await db.query(
+			"SELECT DATE_TRUNC('day', created_at) AS date, SUM (n_fish_feed_use) AS total_fish_feed_used FROM fish_feedings WHERE user_id = $1 GROUP BY DATE_TRUNC('day', created_at)",
+			[userId]
+		);
+
+		if (feedUse.rows.length === 0) {
+			return res.status(200).json({
+				code: "200",
+				message: "User does not have any fish feeding analytic",
+			});
+		}
+
+		res.status(200).json({
+			code: "200",
+			message: "User fish feed use data retrieved succesfully",
+			result: { feedUse: feedUse.rows },
+		});
+	} catch (error) {
+		console.error("Error getting fish feed use data:", error);
 		res.status(500).json({
 			code: "500",
 			message: "Internal server error",
