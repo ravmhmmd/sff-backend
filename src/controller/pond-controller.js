@@ -48,6 +48,13 @@ router.post(
 			const userId = req.userId;
 			const { name, n_fish, n_fish_feed_stock } = req.body;
 
+			if (name.length === 0) {
+				return res.status(200).json({
+					code: "400",
+					message: "Pond name can't be empty",
+				});
+			}
+
 			// Insert the new pond into the database
 			const newPond = await db.query(
 				"INSERT INTO ponds (user_id, name, n_fish, n_fish_feed_stock) VALUES ($1, $2, $3, $4) RETURNING *",
