@@ -230,7 +230,7 @@ router.get("/feed-use/ponds", authenticateToken, async (req, res) => {
 		const userId = req.userId;
 
 		const feedUse = await db.query(
-			"SELECT pond_id, SUM (n_fish_feed_use) as total_fish_feed_used FROM fish_feedings WHERE user_id = $1 GROUP BY pond_id",
+			"SELECT ponds.id, ponds.name, COALESCE(feeding.total_fish_feed_used, 0) as total_fish_feed_used FROM ponds LEFT JOIN (SELECT pond_id, SUM(n_fish_feed_use) as total_fish_feed_used FROM fish_feedings WHERE user_id = $1 GROUP BY pond_id) as feeding ON ponds.id = feeding.pond_id",
 			[userId]
 		);
 
@@ -258,11 +258,12 @@ router.get("/feed-use/ponds", authenticateToken, async (req, res) => {
 // Get fish feed use in one pond
 router.get("/feed-use/ponds/:id", authenticateToken, async (req, res) => {
 	try {
+		const userId = req.userId;
 		const pondId = req.params.id;
 
 		const feedUse = await db.query(
-			"SELECT pond_id, SUM (n_fish_feed_use) as total_fish_feed_used FROM fish_feedings WHERE pond_id = $1 GROUP BY pond_id",
-			[pondId]
+			"SELECT ponds.id, ponds.name, COALESCE(feeding.total_fish_feed_used, 0) as total_fish_feed_used FROM ponds LEFT JOIN (SELECT pond_id, SUM(n_fish_feed_use) as total_fish_feed_used FROM fish_feedings WHERE user_id = $1 GROUP BY pond_id) as feeding ON ponds.id = feeding.pond_id WHERE ponds.id = $2",
+			[userId, pondId]
 		);
 
 		if (feedUse.rows.length === 0) {
