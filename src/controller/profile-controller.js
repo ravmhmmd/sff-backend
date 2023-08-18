@@ -83,6 +83,13 @@ router.put(
 			const userId = req.userId;
 			const { name, email } = req.body;
 
+			if (name.length === 0 || email.length === 0) {
+				return res.status(400).json({
+					code: "400",
+					message: "User name and email cannot be empty",
+				});
+			}
+
 			// Update the user in the database
 			await db.query("UPDATE users SET name = $1, email = $2 WHERE id = $3", [
 				name,
