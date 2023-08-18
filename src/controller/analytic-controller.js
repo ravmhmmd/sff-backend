@@ -230,14 +230,14 @@ router.get("/feed-use/ponds", authenticateToken, async (req, res) => {
 		const userId = req.userId;
 
 		const feedUse = await db.query(
-			"SELECT ponds.id, ponds.name, COALESCE(feeding.total_fish_feed_used, 0) as total_fish_feed_used FROM ponds LEFT JOIN (SELECT pond_id, SUM(n_fish_feed_use) as total_fish_feed_used FROM fish_feedings WHERE user_id = $1 GROUP BY pond_id) as feeding ON ponds.id = feeding.pond_id",
+			"SELECT ponds.id, ponds.name, COALESCE(feeding.total_fish_feed_used, 0) as total_fish_feed_used FROM ponds LEFT JOIN (SELECT pond_id, SUM(n_fish_feed_use) as total_fish_feed_used FROM fish_feedings WHERE user_id = $1 GROUP BY pond_id) as feeding ON ponds.id = feeding.pond_id WHERE ponds.user_id = $1",
 			[userId]
 		);
 
 		if (feedUse.rows.length === 0) {
 			return res.status(200).json({
 				code: "200",
-				message: "User does not have any fish feeding analytic",
+				message: "User does not have any pond",
 			});
 		}
 
@@ -262,14 +262,14 @@ router.get("/feed-use/ponds/:id", authenticateToken, async (req, res) => {
 		const pondId = req.params.id;
 
 		const feedUse = await db.query(
-			"SELECT ponds.id, ponds.name, COALESCE(feeding.total_fish_feed_used, 0) as total_fish_feed_used FROM ponds LEFT JOIN (SELECT pond_id, SUM(n_fish_feed_use) as total_fish_feed_used FROM fish_feedings WHERE user_id = $1 GROUP BY pond_id) as feeding ON ponds.id = feeding.pond_id WHERE ponds.id = $2",
+			"SELECT ponds.id, ponds.name, COALESCE(feeding.total_fish_feed_used, 0) as total_fish_feed_used FROM ponds LEFT JOIN (SELECT pond_id, SUM(n_fish_feed_use) as total_fish_feed_used FROM fish_feedings WHERE user_id = $1 GROUP BY pond_id) as feeding ON ponds.id = feeding.pond_id WHERE ponds.id = $2 AND ponds.user_id = $1",
 			[userId, pondId]
 		);
 
 		if (feedUse.rows.length === 0) {
-			return res.status(200).json({
-				code: "200",
-				message: "Pond does not have any fish feeding analytic",
+			return res.status(404).json({
+				code: "404",
+				message: "User does not have any pond with the provided id",
 			});
 		}
 
