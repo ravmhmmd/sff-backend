@@ -318,4 +318,34 @@ router.get("/feed-use/daily", authenticateToken, async (req, res) => {
 	}
 });
 
+// Get today fish feed use
+router.get("/feed-use/today", authenticateToken, async (req, res) => {
+	try {
+		const userId = req.userId;
+
+		const feedUse = await db.query(
+			"SELECT d.date, COALESCE(SUM(ff.n_fish_feed_use), 0) AS total_fish_feed_used FROM (SELECT CURRENT_DATE AS date) AS d LEFT JOIN fish_feedings AS ff ON DATE_TRUNC('day', ff.created_at) = d.date AND ff.user_id = $1 GROUP BY d.date;",
+			[userId]
+		);
+
+		if (feedUse.rows.length === 0) {
+			return res.status(200).json({
+				code: "200",
+				message: "User does not have any fish feeding analytic for today",
+			});
+		}
+
+		res.status(200).json({
+			code: "200",
+			message: "User fish feed use data retrieved succesfully",
+			result: { feedUse: feedUse.rows },
+		});
+	} catch (error) {
+		console.error("Error getting fish feed use data:", error);
+		res.status(500).json({
+			code: "500",
+			message: "Internal server error",
+		});
+	}
+});
 module.exports = router;
