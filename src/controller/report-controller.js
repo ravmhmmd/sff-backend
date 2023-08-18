@@ -17,6 +17,18 @@ router.post(
 			const userId = req.userId;
 			const { pond_id, video_path } = req.body;
 
+			const isUserHaveThePond = await db.query(
+				"SELECT * FROM ponds WHERE user_id = $1 AND id = $2",
+				[userId, pond_id]
+			);
+
+			if (isUserHaveThePond.rows.length === 0) {
+				return res.status(400).json({
+					code: "400",
+					message: "User doesn't have pond with the id provided",
+				});
+			}
+
 			// Insert the new hunger data into the database
 			const newHunger = await db.query(
 				"INSERT INTO fish_hungers (user_id, pond_id, video_path) VALUES ($1, $2, $3) RETURNING *",
@@ -121,6 +133,18 @@ router.post(
 		try {
 			const userId = req.userId;
 			const { pond_id, feeding_type, n_fish_feed_use } = req.body;
+
+			const isUserHaveThePond = await db.query(
+				"SELECT * FROM ponds WHERE user_id = $1 AND id = $2",
+				[userId, pond_id]
+			);
+
+			if (isUserHaveThePond.rows.length === 0) {
+				return res.status(400).json({
+					code: "400",
+					message: "User doesn't have pond with the id provided",
+				});
+			}
 
 			// Insert the new feeding data into the database
 			const newFeeding = await db.query(
