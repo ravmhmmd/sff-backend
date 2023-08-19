@@ -8,52 +8,45 @@ const storage = multer.memoryStorage();
 const postForm = multer({ storage });
 
 // Create a new fish hunger data for the authenticated user
-router.post(
-	"/hunger/add-report",
-	authenticateToken,
-	postForm.none(),
-	async (req, res) => {
-		try {
-			const userId = req.userId;
-			const { pond_id, video_path } = req.body;
+router.post("/hunger/add-report", postForm.none(), async (req, res) => {
+	try {
+		const { user_id, pond_id, video_path } = req.body;
 
-			const isUserHaveThePond = await db.query(
-				"SELECT * FROM ponds WHERE user_id = $1 AND id = $2",
-				[userId, pond_id]
-			);
+		const isUserHaveThePond = await db.query(
+			"SELECT * FROM ponds WHERE user_id = $1 AND id = $2",
+			[user_id, pond_id]
+		);
 
-			if (isUserHaveThePond.rows.length === 0) {
-				return res.status(400).json({
-					code: "400",
-					message: "User doesn't have pond with the id provided",
-				});
-			}
-
-			// Insert the new hunger data into the database
-			const newHunger = await db.query(
-				"INSERT INTO fish_hungers (user_id, pond_id, video_path) VALUES ($1, $2, $3) RETURNING *",
-				[userId, pond_id, video_path]
-			);
-
-			res.status(201).json({
-				code: "201",
-				message: "User new fish hunger data added successfully",
-				result: { newHunger: newHunger.rows[0] },
-			});
-		} catch (error) {
-			console.error("Error creating fish hunger data:", error);
-			res.status(500).json({
-				code: "500",
-				message: "Internal server error",
+		if (isUserHaveThePond.rows.length === 0) {
+			return res.status(400).json({
+				code: "400",
+				message: "User doesn't have pond with the id provided",
 			});
 		}
+
+		// Insert the new hunger data into the database
+		const newHunger = await db.query(
+			"INSERT INTO fish_hungers (user_id, pond_id, video_path) VALUES ($1, $2, $3) RETURNING *",
+			[user_id, pond_id, video_path]
+		);
+
+		res.status(201).json({
+			code: "201",
+			message: "User new fish hunger data added successfully",
+			result: { newHunger: newHunger.rows[0] },
+		});
+	} catch (error) {
+		console.error("Error creating fish hunger data:", error);
+		res.status(500).json({
+			code: "500",
+			message: "Internal server error",
+		});
 	}
-);
+});
 
 // Add fish hunger data video path (deprecated)
 router.put(
 	"/hunger/:id/update-video-path",
-	authenticateToken,
 	postForm.none(),
 	async (req, res) => {
 		try {
@@ -90,7 +83,6 @@ router.put(
 // Add fish hunger data prediction result
 router.put(
 	"/hunger/:id/update-prediction",
-	authenticateToken,
 	postForm.none(),
 	async (req, res) => {
 		try {
@@ -125,58 +117,52 @@ router.put(
 );
 
 // Create a new fish feeding data for the authenticated user
-router.post(
-	"/feeding/add-report",
-	authenticateToken,
-	postForm.none(),
-	async (req, res) => {
-		try {
-			const userId = req.userId;
-			const { pond_id, feeding_type, n_fish_feed_use } = req.body;
+router.post("/feeding/add-report", postForm.none(), async (req, res) => {
+	try {
+		const { user_id, pond_id, feeding_type, n_fish_feed_use } = req.body;
 
-			const isUserHaveThePond = await db.query(
-				"SELECT * FROM ponds WHERE user_id = $1 AND id = $2",
-				[userId, pond_id]
-			);
+		const isUserHaveThePond = await db.query(
+			"SELECT * FROM ponds WHERE user_id = $1 AND id = $2",
+			[user_id, pond_id]
+		);
 
-			if (isUserHaveThePond.rows.length === 0) {
-				return res.status(400).json({
-					code: "400",
-					message: "User doesn't have pond with the id provided",
-				});
-			}
-
-			// Insert the new feeding data into the database
-			const newFeeding = await db.query(
-				"INSERT INTO fish_feedings (user_id, pond_id, feeding_type, n_fish_feed_use) VALUES ($1, $2, $3, $4) RETURNING *",
-				[userId, pond_id, feeding_type, n_fish_feed_use]
-			);
-
-			// Update fish feed stock in pond
-			await db.query(
-				"UPDATE ponds SET n_fish_feed_stock = n_fish_feed_stock - $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
-				[n_fish_feed_use, pond_id]
-			);
-
-			// Update fish feed stock in user
-			await db.query(
-				"UPDATE users SET n_fish_feed_stock_total = (SELECT sum(n_fish_feed_stock) FROM ponds WHERE user_id = $1), updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *",
-				[userId]
-			);
-
-			res.status(201).json({
-				code: "201",
-				message: "User new fish feeding data added successfully",
-				result: { newFeeding: newFeeding.rows[0] },
-			});
-		} catch (error) {
-			console.error("Error creating fish feeding data:", error);
-			res.status(500).json({
-				code: "500",
-				message: "Internal server error",
+		if (isUserHaveThePond.rows.length === 0) {
+			return res.status(400).json({
+				code: "400",
+				message: "User doesn't have pond with the id provided",
 			});
 		}
+
+		// Insert the new feeding data into the database
+		const newFeeding = await db.query(
+			"INSERT INTO fish_feedings (user_id, pond_id, feeding_type, n_fish_feed_use) VALUES ($1, $2, $3, $4) RETURNING *",
+			[user_id, pond_id, feeding_type, n_fish_feed_use]
+		);
+
+		// Update fish feed stock in pond
+		await db.query(
+			"UPDATE ponds SET n_fish_feed_stock = n_fish_feed_stock - $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
+			[n_fish_feed_use, pond_id]
+		);
+
+		// Update fish feed stock in user
+		await db.query(
+			"UPDATE users SET n_fish_feed_stock_total = (SELECT sum(n_fish_feed_stock) FROM ponds WHERE user_id = $1), updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *",
+			[user_id]
+		);
+
+		res.status(201).json({
+			code: "201",
+			message: "User new fish feeding data added successfully",
+			result: { newFeeding: newFeeding.rows[0] },
+		});
+	} catch (error) {
+		console.error("Error creating fish feeding data:", error);
+		res.status(500).json({
+			code: "500",
+			message: "Internal server error",
+		});
 	}
-);
+});
 
 module.exports = router;
